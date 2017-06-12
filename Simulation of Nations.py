@@ -1,14 +1,14 @@
 #to do list:
 	# -Fix the player deletion system
-	# -create production
-	# -create different resource types
+	#! -create production
+	#! -create different resource types
 	# -revamp values for turn by turn things
-	# -+create random events for characters based on type and civility
+	# +create random events for characters based on type and civility
 
 import random
 import sys
 from os import path
-
+import os
 turnsdoc=open(r"C:\Users\User\Desktop\program crap\Simulation of Nations and stuff\specifics\players",("r"))
 stuff = turnsdoc.read()
 stuff = stuff.split("\n")
@@ -75,7 +75,7 @@ def info(name,type,resources,military,civility,money,pop):
 			type2 = "Utopian"
 			title = "Gods"
 		print(
-		"The",type2,"Nation of",name,": \n Population:",pop,title,
+		"\nThe",type2,"Nation of",name,": \n Population:",pop,title,
 		"\n Resources:",resources,"\n Military: ",military,
 		"\n Civility: ",civility, "\n Money: ",money)
 		
@@ -132,7 +132,22 @@ def neut(number):
 	if number > 2000:
 		number = 2000
 	return(number)
-	
+
+def delete(name):
+	pat = path.join(r'C:\Users\User\Desktop\program crap\Simulation of Nations and stuff\players', name)
+	os.remove(pat)
+	try:
+		stuff.remove(name+" done")
+	except ValueError:
+		stuff.remove(name)
+	x=0
+	turnsdoc=open(r"C:\Users\User\Desktop\program crap\Simulation of Nations and stuff\specifics\players",("w"))
+	for things in stuff:
+		turnsdoc.write(things)
+		if x < (len(stuff)-1):
+			turnsdoc.write("\n")
+			x+=1
+
 print("_______________________________________________________________\n"
 "Programming by Lance Gruber, Concept by Alex Flynn,\n"
 "and Comedic Relief / Moral Support by Charlie Kennedy\n"
@@ -152,7 +167,7 @@ if selection == "quit":
 	sys.exit()
 
 elif selection == "options":
-	this=input("Would you like to access the *logs* or the status of *turns* for the players? : ")
+	this=input("Would you like to access the *logs*,the status of *turns*, or *delete* a character? : ")
 	if this == "logs":
 		logs=open(r"C:\Users\User\Desktop\program crap\Simulation of Nations and stuff\specifics\log",("r"))
 		log=logs.read()
@@ -171,7 +186,17 @@ elif selection == "options":
 			logFile=open(r"C:\Users\User\Desktop\program crap\Simulation of Nations and stuff\specifics\log",("w"))
 			logFile.write("Log Data ------------------------------------")
 			sys.exit()
-	if this != "turns" and this != "logs" and this!= "clearlog":
+	if this == "delete":
+		iput=input("Who? and don't be that guy who deletes someone else's acc without permission : ")
+		sure=input("but like are you sure because this is irreversible : ")
+		if sure == "yes":
+			try:
+				delete(iput)
+			except FileNotFoundError:
+				print("deleting something that doesn't exist? impressive.")
+			else:
+				print("deleted!")
+	if this != "turns" and this != "logs" and this!= "clearlog" and this!="delete":
 		print("that isn't an option for the options")
 	sys.exit()
 elif selection == "help":
@@ -366,7 +391,7 @@ if selection == "load":
 		if option != "execute" and option != "info" and option != "execute by hanging":
 			print("you dissapoint me")
 			sys.exit()
-if selection != "load" and selection != "new":
+if selection != "load" and selection != "new" and selection != "options" and selection != "help" and selection !="quit":
 	print("it was a simple question my child")
 	sys.exit()
 
@@ -376,22 +401,17 @@ try:
 except NameError:
 	print("you are doing dev stuff or you broke it")
 else:
-		try:
-			line_number=stuff.index(name)
-		except ValueError:
-			print("didn't work")
-		else:
-			x=0
-			turnsdoc=open(r"C:\Users\User\Desktop\program crap\Simulation of Nations and stuff\specifics\players",("w"))
-		if name not in stuff:
-			stuff.append(name)
-		for things in stuff:
-			turnsdoc.write(things)
-			if things == name:
-				turnsdoc.write(" done")
-			if x < (len(stuff)-1): turnsdoc.write('\n')
-			x+=1
-			
+	if name not in stuff: stuff.append(name)
+	line_number=stuff.index(name)
+	x=0
+	turnsdoc=open(r"C:\Users\User\Desktop\program crap\Simulation of Nations and stuff\specifics\players",("w"))
+	for things in stuff:
+		turnsdoc.write(things)
+		if things == name:
+			turnsdoc.write(" done")
+		if x < (len(stuff)-1): turnsdoc.write('\n')
+		x+=1
+		
 try:
 	logData
 except NameError:
@@ -484,12 +504,11 @@ if all('done' in i for i in stuff):
 					resourcesE = resourcesE - 5
 			if typeE == "A":
 				civilityE -= 1
-			stats(nameE,typeE,resourcesE,militaryE,civilityE,moneyE,populationE)
 				if random.randint(1,10) == 5 and civilityE < 8:
 					print("The people from",nameE,"stage a revolt and fail, but cause chaos nonetheless")
 					militaryE -= 15
 					populationE -= 30
-
+			stats(nameE,typeE,resourcesE,militaryE,civilityE,moneyE,populationE)
 	overviewData[1]=int(overviewData[1])
 	overviewData[1]+=1
 

@@ -1,12 +1,22 @@
+#to do list:
+	# -Fix the player deletion system
+	# -create production
+	# -create different resource types
+	# -revamp values for turn by turn things
+	# -+create random events for characters based on type and civility
+
+import random
 import sys
 from os import path
 
 turnsdoc=open(r"C:\Users\User\Desktop\program crap\Simulation of Nations and stuff\specifics\players",("r"))
 stuff = turnsdoc.read()
 stuff = stuff.split("\n")
-
+overview=open(r'C:\Users\User\Desktop\program crap\Simulation of Nations and stuff\specifics\overview',("r"))
+overviewData=overview.read()
+overviewData=overviewData.split("\n")
+print(stuff)
 def newPlayer(name):
-	
 	country=input("Authoritarian,Mercantile,Democratic, or Utilitarian type government? (A,M,D,U): ")
 	pat = path.join(r'C:\Users\User\Desktop\program crap\Simulation of Nations and stuff\players', name)
 	save = open(pat,"w+")
@@ -77,6 +87,7 @@ def stats(name,type,R,M,C,I,pop):
 	for i in R,M,C,I,pop:
 		i=neut(i)
 		i=int(float(i))
+	
 	save.write(name)
 	save.write("\n")
 	save.write(type)
@@ -93,10 +104,15 @@ def stats(name,type,R,M,C,I,pop):
 
 def fetchPlayer(name):
 	pat = path.join(r'C:\Users\User\Desktop\program crap\Simulation of Nations and stuff\players', name)
-	save = open(pat,'r')
-	data=save.read()
-	data=data.split("\n")
-	return (data)
+	try:
+		save = open(pat,'r')
+	except FileNotFoundError:
+		print("you just don't exist")
+		sys.exit()
+	else:
+		data=save.read()
+		data=data.split("\n")
+		return (data)
 
 def war(offense,defense,civildefense,type):
 	if type == "A":
@@ -127,7 +143,7 @@ print("_______________________________________________________________\n"
 "_______________________________________________________________\n"
 "Welcome to the Simulation of Nations and Stuff Offical Program!\n"
 "_______________________________________________________________\n"
-"")
+"\n		Turn:",overviewData[1],"\n")
 
 
 selection = input("New, Load, Help, Options, or Quit? : ")
@@ -146,10 +162,16 @@ elif selection == "options":
 			print(each)
 	if this == "turns":
 		print("_______________________________________________________________\nNote:\n If there is a *done* to the right of a name, that player has done their turn\n")
-		print("\nTurn Data----------------------------------")
+		print("\n Turn Data ------------------------------------")
 		for stuffs in stuff:
 			print("  ",stuffs)
-	if this != "turns" and this != "logs":
+	if this == "clearlog":
+		password=input("password? : ")
+		if password == "Geronimo":
+			logFile=open(r"C:\Users\User\Desktop\program crap\Simulation of Nations and stuff\specifics\log",("w"))
+			logFile.write("Log Data ------------------------------------")
+			sys.exit()
+	if this != "turns" and this != "logs" and this!= "clearlog":
 		print("that isn't an option for the options")
 	sys.exit()
 elif selection == "help":
@@ -171,14 +193,13 @@ elif selection == "help":
 elif selection == "new": 
 	name=input("your name? : ")
 	start=newPlayer(name)
+	logData="new"
 if selection == "load": 
 	name=input("Name of Player? : ")
-	if (name + " done") in stuff:
-		print("wait your turn")
-		sys.exit()
+	
 	try:
 		data=fetchPlayer(name)
-	except IOError:
+	except IOError or UnboundLocalError:
 		print(name,"I am so sorry but it seems to me you don't exist")
 		sys.exit()
 	else:
@@ -197,12 +218,15 @@ if selection == "load":
 		money = int(float(d["money"]))
 		population = int(float(d["population"]))
 
-		option=input("Would you like your country's info or an action to be executed? : ")
+		option=input("Would you like your country's *info* or to *execute* an action? : ")
 		if option == "info": 
 			info(name,type,resources,military,civility,money,population)
 			sys.exit()
 		if option == "execute":
-			execute = input("War - Trade - Production - Pass : ")
+			if (name + " done") in stuff:
+				print("Please wait until everyone else has had a chance to do their turn.")
+				sys.exit()
+			execute = input("War - Trade - Production - Pass: ")
 
 			if execute == "war":			
 				print("Your military force is currently",military,"strong, who would you like to attack?")
@@ -225,7 +249,7 @@ if selection == "load":
 					c["population"] = int(float(who[6]))
 					print("Your Enemy's Information is Below \n")
 					info(c["name"],c["type"],c["resources"],c["military"],c["civility"],c["money"],c["population"])
-					confirm = input("Are you sure you want to attack? : ")
+					confirm = input("Are you sure you want to attack? yes/no : ")
 					if confirm == "yes":
 						try:
 							troops=int(input("With how many of your troops? : "))
@@ -249,11 +273,12 @@ if selection == "load":
 								if result > 0:
 									warResults="w"
 									print("A crushing victory that I am sure high schoolers will write essays about for hundreds of years to come \n What is left of your army: ",result)
-									military=military-troops+result
 									if type == "A":
 										civility = civility + 15
+										military = military-troops+int(float(result/1.2))
 									else:
 										civility = civility + 5
+										military=military-troops+result
 								c["military"] -= int(float(military))
 								c["military"] = neut(c["military"])
 								logData = "war"
@@ -262,7 +287,9 @@ if selection == "load":
 							except OverflowError:
 								print("that's not good")
 								sys.exit()
-
+					else:
+						print("ok nevermind then")
+						sys.exit()
 			if execute == "trade":
 				print("	Your Resources: ",resources,"\n	Your Money: ", money)
 				name2 = input("With Who? : ")
@@ -282,12 +309,14 @@ if selection == "load":
 					c["civility"] = int(float(who[4]))
 					c["money"] = int(float(who[5]))
 					c["population"] = int(float(who[6]))
-					what = input("Are you giving resources or money? : ")
+					print("	His/Her/Attack Helicopter's Resources: ",c["resources"],"\n	His/Her/Attack Helicopter's Money: ",c["money"])
+					what = input("Are you giving *resources* or *money*? : ")
 					if what == "resources":
 						howmuch = int(input("How many resources? : "))
 						payment = int(input("How many dollar bills are you going to be handed for your goodies? : "))
 						if howmuch > resources or payment > c["resources"]:
 							print("One of you does not have enough to give...")
+							sys.exit()
 						else:
 							resources -= howmuch
 							c["resources"] += howmuch
@@ -296,9 +325,10 @@ if selection == "load":
 							print("Charlie is happy with you giving resources to",c["name"],"!")
 					if what == "money":
 						howmuch = int(input("How much money? : "))
-						payment = int(input("How much are you recieving? (prob not a lot like come on man you are not a barter master): "))
+						payment = int(input("How much are you recieving? : "))
 						if howmuch > money or payment > c["money"]:
 							print("One of you doesn't have enough to give...")
+							sys.exit()
 						else:
 							money -= howmuch
 							resources += payment
@@ -314,7 +344,17 @@ if selection == "load":
 					except NameError:
 						print("what even happened here")
 						sys.exit()
-			if execute != "trade" and execute != "war":
+			
+			if execute == "pass":
+				ok=input("are you sure you don't want to do anything during your turn? yes/no : ")
+				if ok == "yes": 
+					print("ok your turn is over")
+					logData="pass"
+				else: 
+					print("that is probably a good choice")
+					sys.exit()
+				
+			if execute != "trade" and execute != "war" and execute != "production" and execute != "pass":
 				print("I would hope that this is a typo")
 				sys.exit()
 			try:		
@@ -326,14 +366,9 @@ if selection == "load":
 		if option != "execute" and option != "info" and option != "execute by hanging":
 			print("you dissapoint me")
 			sys.exit()
-else:
+if selection != "load" and selection != "new":
 	print("it was a simple question my child")
 	sys.exit()
-
-
-
-
-
 
 
 try:
@@ -341,7 +376,6 @@ try:
 except NameError:
 	print("you are doing dev stuff or you broke it")
 else:
-	if name in stuff:
 		try:
 			line_number=stuff.index(name)
 		except ValueError:
@@ -349,23 +383,27 @@ else:
 		else:
 			x=0
 			turnsdoc=open(r"C:\Users\User\Desktop\program crap\Simulation of Nations and stuff\specifics\players",("w"))
+		if name not in stuff:
+			stuff.append(name)
 		for things in stuff:
 			turnsdoc.write(things)
 			if things == name:
 				turnsdoc.write(" done")
 			if x < (len(stuff)-1): turnsdoc.write('\n')
 			x+=1
-
+			
 try:
 	logData
 except NameError:
-	pass
+	print("if you are getting this message something wrong happened")
 else:
 	logFile=open(r"C:\Users\User\Desktop\program crap\Simulation of Nations and stuff\specifics\log",("a"))
 	logFile.write("\n")
 	logFile.write(name)
+	if logData == "new":
+		logFile.write(" enters the carnage ")
 	if logData == "trade":
-		logFile.write(" trades ")
+		logFile.write(" traded ")
 		logFile.write(str(howmuch))
 		logFile.write(" ")
 		if what == "money":
@@ -382,31 +420,87 @@ else:
 			logFile.write(" resources")
 		
 	if logData == "war":
-		logFile.write(" starts a battle with ")
+		logFile.write(" started a battle with ")
 		logFile.write(name2)
 		logFile.write(" and ")
 		if warResults == "l":
-			logFile.write("loses horribly")
+			logFile.write("lost horribly")
 		else:
-			logFile.write("destroys the enemy")
-		
-
+			logFile.write("destroyed the enemy")
+	if logData == "pass":
+		logFile.write(" just sort of sat there")
 		
 turnsdoc=open(r"C:\Users\User\Desktop\program crap\Simulation of Nations and stuff\specifics\players",("r"))
 stuff = turnsdoc.read()
-stuff = stuff.split("\n")		
-
+stuff = stuff.split("\n")
+	
 if all('done' in i for i in stuff):
 	turnsdoc=open(r"C:\Users\User\Desktop\program crap\Simulation of Nations and stuff\specifics\players",("w"))
-	print("turn over!")
+	print("turn over!\n\n\n\n 		Thank god you finally did your turn everyone was waiting...")
 	i = 0
-	
-	while i+1 < len(stuff):
+
+	while i < len(stuff):
 		if "done" in stuff[i]:
 			stuff[i]=stuff[i].replace(" done", "")
 		i += 1
-	
+	x=0
 	for things in stuff:
 		turnsdoc.write(things)
-		turnsdoc.write("\n")
-	turnsdoc.write("done")
+		
+		if x < (len(stuff)-1):
+			turnsdoc.write("\n")
+			x+=1
+		
+	
+	for thing in stuff:
+		try:
+			who=fetchPlayer(thing)
+		except FileNotFoundError:
+			pass
+		else:
+			nameE = who[0]
+			typeE = who[1]
+			resourcesE = int(float(who[2]))
+			militaryE= int(float(who[3]))
+			civilityE = int(float(who[4]))
+			moneyE = int(float(who[5]))
+			populationE = int(float(who[6]))
+			populationE = int(float(populationE*1.05))
+			if typeE == "D":
+				civilityE = civilityE + 2
+				if random.randint(1,10) == 5:
+					civilityE = civilityE - 10
+					print("uprising for",nameE,", and he loses 10 civility!")
+			if typeE == "M":
+				moneyE = int(float(moneyE*1.02 + 1))
+				if random.randint(1,20) == 10:
+					print("Looks like",nameE,"'s Economy just went into a short depression and lost 20 money and half his/her civility!")
+					moneyE = moneyE - 20
+					civilityE = civilityE/2
+			if typeE == "U":
+				resourcesE = int(float(resourcesE + (civilityE*populationE)/1000))
+				if random.randint(1,5) == 3:
+					print("A massive drought just wrecked the farms of",nameE,", losing him/her 5 resources!")
+					resourcesE = resourcesE - 5
+			if typeE == "A":
+				civilityE -= 1
+			stats(nameE,typeE,resourcesE,militaryE,civilityE,moneyE,populationE)
+				if random.randint(1,10) == 5 and civilityE < 8:
+					print("The people from",nameE,"stage a revolt and fail, but cause chaos nonetheless")
+					militaryE -= 15
+					populationE -= 30
+
+	overviewData[1]=int(overviewData[1])
+	overviewData[1]+=1
+
+	x=0
+	overview=open(r'C:\Users\User\Desktop\program crap\Simulation of Nations and stuff\specifics\overview',("w"))
+	for i in overviewData:
+		overview.write(str(i))
+		if x < len(overviewData)-1:
+			overview.write("\n")
+			x+=1
+	
+	
+	
+	

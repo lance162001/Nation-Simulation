@@ -1,0 +1,9 @@
+ +Fix the player deletion system
++create production
+! -create different resource types
+ -revamp values for turn by turn things
+ +create random events for characters based on type and civility
+ -win/loss conditions
+ -useful overview data
+Variables - Resources - Money - Civility - Industry(Money) - Weapons - Ports
+work force as a future variable!
